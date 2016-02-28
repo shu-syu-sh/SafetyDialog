@@ -7,11 +7,11 @@ import android.util.Log;
 
 import org.jetbrains.annotations.NotNull;
 
-import jp.shusyush.android.safetydialog.DialogFragmentProvider;
+import jp.shusyush.android.safetydialog.OnClickListener;
 import jp.shusyush.android.safetydialog.SafetyDialog;
 import jp.shusyush.android.safetydialog.SimpleDialogFragment;
 
-public class MainActivity extends AppCompatActivity implements SimpleDialogFragment.OnClickListener {
+public class MainActivity extends AppCompatActivity implements OnClickListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,13 +22,8 @@ public class MainActivity extends AppCompatActivity implements SimpleDialogFragm
     @Override
     protected void onResume() {
         super.onResume();
-        SafetyDialog.show(this, 1, new DialogFragmentProvider<SampleFragement>() {
-            @NotNull
-            @Override
-            public SampleFragement provide() {
-                return new SampleFragement();
-            }
-        });
+        SafetyDialog.show(this, 1, SimpleDialogFragment.Builder.build("Sample Message.",
+                false, "OK"));
     }
 
     @Override

@@ -13,16 +13,16 @@ const val REQUEST_CODE = "REQUEST_CODE"
 
 interface Safety
 
-interface DialogFragmentProvider<T> where T : Safety, T : DialogFragment {
-    fun provide(): T
+interface OnClickListener {
+    fun onClick(f: DialogFragment, requestCode: Int, which: Int)
 }
 
 fun <CallbackActivity, SafetyDialogFragment> show(activity: CallbackActivity,
                                                   requestCode: Int,
-                                                  provider: DialogFragmentProvider<SafetyDialogFragment>)
+                                                  f: SafetyDialogFragment)
         where
         CallbackActivity : FragmentActivity,
-        CallbackActivity : SimpleDialogFragment.OnClickListener,
+        CallbackActivity : OnClickListener,
         SafetyDialogFragment : Safety,
         SafetyDialogFragment : DialogFragment {
     val fragmentManager = activity.supportFragmentManager
@@ -30,18 +30,17 @@ fun <CallbackActivity, SafetyDialogFragment> show(activity: CallbackActivity,
         return
     }
 
-    val f = provider.provide()
-    f.arguments = Bundle().apply { putInt(REQUEST_CODE, requestCode) }
+    f.arguments = (f.arguments ?: Bundle()).apply { putInt(REQUEST_CODE, requestCode) }
     f.show(fragmentManager, TAG)
 }
 
 fun <SafetyDialogFragment, CallbackFragment> show(activity: FragmentActivity,
                                                   requestCode: Int,
-                                                  provider: DialogFragmentProvider<SafetyDialogFragment>,
+                                                  f: SafetyDialogFragment,
                                                   callBackFragment: CallbackFragment)
         where
         CallbackFragment : Fragment,
-        CallbackFragment : SimpleDialogFragment.OnClickListener,
+        CallbackFragment : OnClickListener,
         SafetyDialogFragment : Safety,
         SafetyDialogFragment : DialogFragment {
     val fragmentManager = activity.supportFragmentManager
@@ -54,7 +53,6 @@ fun <SafetyDialogFragment, CallbackFragment> show(activity: FragmentActivity,
             .add(callBackFragment, callBackFragment.javaClass.simpleName)
             .commit()
 
-    val f = provider.provide()
     f.setTargetFragment(callBackFragment, requestCode)
     f.show(fragmentManager, TAG)
 }

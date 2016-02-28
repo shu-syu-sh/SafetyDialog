@@ -10,38 +10,44 @@ import android.support.v7.app.AlertDialog
  *
  * Created by shu-syu-sh.
  */
-abstract class SimpleDialogFragment : DialogFragment(), Safety {
+class SimpleDialogFragment : SafetyDialogFragment() {
 
-    interface OnClickListener {
-        fun onClick(f: DialogFragment, requestCode: Int, which: Int)
-    }
+    companion object Builder {
+        internal const val POSITIVE_BUTTON_TITLE = "SimpleDialogFragment.POSITIVE_BUTTON_TITLE"
+        internal const val NEGATIVE_BUTTON_TITLE = "SimpleDialogFragment.NEGATIVE_BUTTON_TITLE"
+        internal const val TITLE = "SimpleDialogFragment.TITLE"
+        internal const val MESSAGE = "SimpleDialogFragment.MESSAGE"
+        internal const val CANCELABLE = "SimpleDialogFragment.CANCELABLE"
 
-    open val positiveButtonTitle: CharSequence? = null
-
-    open val negativeButtonTitle: CharSequence? = null
-
-    open val title: CharSequence? = null
-
-    abstract val message: CharSequence
-
-    open val cancelable = false
-
-    internal val adapter = DialogInterface.OnClickListener { dialogInterface, which ->
-        val targetFragment = targetFragment as? OnClickListener
-        if (null == targetFragment?.onClick(this, targetRequestCode, which)) {
-            val requestCode = arguments?.getInt(REQUEST_CODE, 0) ?: 0
-            val l = activity as? OnClickListener
-            l?.onClick(this, requestCode, which)
+        @JvmOverloads
+        fun build(message: CharSequence,
+                  cancelable: Boolean = false,
+                  positiveButtonTitle: CharSequence? = null,
+                  negativeButtonTitle: CharSequence? = null,
+                  title: CharSequence? = null): SimpleDialogFragment {
+            return SimpleDialogFragment().apply {
+                arguments = (arguments ?: Bundle()).apply {
+                    listOf(TITLE, POSITIVE_BUTTON_TITLE, NEGATIVE_BUTTON_TITLE)
+                            .zip(listOf(title, positiveButtonTitle, negativeButtonTitle))
+                            .asSequence()
+                            .filter { it.second != null }
+                            .forEach { putCharSequence(it.first, it.second) }
+                    putCharSequence(MESSAGE, message)
+                    putBoolean(CANCELABLE, cancelable)
+                }
+            }
         }
-
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?) = with(AlertDialog.Builder(context)) {
-        positiveButtonTitle?.run { setPositiveButton(this, adapter) }
-        negativeButtonTitle?.run { setNegativeButton(this, adapter) }
-        title?.run { setTitle(this) }
-        setMessage(message)
-        this@SimpleDialogFragment.setCancelable(cancelable)
+        val args = arguments
+                ?: throw IllegalArgumentException("arguments is null. Did you create instance from Builder#build()?.")
+        args.getCharSequence(POSITIVE_BUTTON_TITLE)?.run { setPositiveButton(this, adapter) }
+        args.getCharSequence(NEGATIVE_BUTTON_TITLE)?.run { setNegativeButton(this, adapter) }
+        args.getCharSequence(TITLE)?.run { setTitle(this) }
+        setMessage(args.getCharSequence(MESSAGE)
+                ?: throw IllegalArgumentException("message is null. Did you create instance from Builder#build()?."))
+        this@SimpleDialogFragment.isCancelable = args.getBoolean(CANCELABLE, true)
         create()
     }
 
